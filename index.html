@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>森林守護者冒險 - SDG15遊戲</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: url('https://cdn.pixabay.com/photo/2015/12/01/20/28/forest-1072828_1280.jpg') no-repeat center center fixed;
+      background-size: cover;
+      padding: 20px;
+      text-align: center;
+      animation: backgroundScroll 30s linear infinite;
+    }
+
+    @keyframes backgroundScroll {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+
+    #game {
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      max-width: 650px;
+      margin: auto;
+      border-radius: 20px;
+      box-shadow: 0 0 25px rgba(0,0,0,0.4);
+      transition: all 0.5s ease-in-out;
+    }
+
+    .question {
+      font-size: 22px;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+
+    .option {
+      background-color: #a5d6a7;
+      border: none;
+      padding: 12px 25px;
+      margin: 10px;
+      font-size: 18px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: 0.3s;
+    }
+
+    .option:hover {
+      background-color: #66bb6a;
+      color: white;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 24px;
+      color: #2e7d32;
+      font-weight: bold;
+    }
+
+    #forestImage {
+      width: 100%;
+      max-width: 400px;
+      margin-top: 20px;
+      border-radius: 10px;
+      display: none;
+      animation: fadein 1s;
+    }
+
+    .progress-bar {
+      height: 15px;
+      background: #c8e6c9;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #66bb6a;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    @keyframes fadein {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    audio {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <h1>🌳 森林守護者冒險</h1>
+    <p>你是森林的守護者，你的選擇將決定大自然的命運。</p>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="question" id="question"></div>
+    <div id="options"></div>
+    <div id="result"></div>
+    <img id="forestImage" src="" alt="森林命運圖示" />
+  </div>
+
+  <!-- 聲音 -->
+  <audio id="correctSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_6f3529d44a.mp3"></audio>
+  <audio id="wrongSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_88c7d0b112.mp3"></audio>
+  <audio id="bgMusic" src="https://cdn.pixabay.com/audio/2023/04/13/audio_7c0a2f8161.mp3" autoplay loop></audio>
+  <audio id="endMusic" src="https://cdn.pixabay.com/audio/2023/03/20/audio_a57f93a0fc.mp3"></audio>
+
+  <script>
+    const questions = [
+      {
+        text: "你在森林中發現一棵老樹，社區想砍掉蓋停車場，你會？",
+        options: [
+          { text: "提議改用空地蓋停車場", score: 1 },
+          { text: "支持砍樹換發展", score: 0 }
+        ]
+      },
+      {
+        text: "你發現有人在山上偷倒垃圾，該怎麼辦？",
+        options: [
+          { text: "檢舉給環保單位", score: 1 },
+          { text: "裝作沒看到", score: 0 }
+        ]
+      },
+      {
+        text: "學校要辦淨山活動，你會？",
+        options: [
+          { text: "主動參加，邀朋友一起", score: 1 },
+          { text: "懶得參加", score: 0 }
+        ]
+      },
+      {
+        text: "家人想買稀有木材家具，你會？",
+        options: [
+          { text: "建議改用永續木材", score: 1 },
+          { text: "沒差，只要好看就買", score: 0 }
+        ]
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    const correctSound = document.getElementById("correctSound");
+    const wrongSound = document.getElementById("wrongSound");
+    const endMusic = document.getElementById("endMusic");
+
+    function showQuestion() {
+      if (currentQuestion < questions.length) {
+        const q = questions[currentQuestion];
+        document.getElementById("question").innerText = q.text;
+        const optionsDiv = document.getElementById("options");
+        optionsDiv.innerHTML = "";
+
+        // 更新進度條
+        document.getElementById("progressFill").style.width = ((currentQuestion / questions.length) * 100) + "%";
+
+        q.options.forEach(option => {
+          const btn = document.createElement("button");
+          btn.innerText = option.text;
+          btn.className = "option";
+          btn.onclick = () => {
+            score += option.score;
+            option.score ? correctSound.play() : wrongSound.play();
+            currentQuestion++;
+            updateForestImage();
+            showQuestion();
+          };
+          optionsDiv.appendChild(btn);
+        });
+      } else {
+        endGame();
+      }
+    }
+
+    function updateForestImage() {
+      const image = document.getElementById("forestImage");
+      let imgSrc = "";
+      let display = true;
+
+      switch (score) {
+        case 0:
+          imgSrc = "https://cdn.pixabay.com/photo/2019/05/31/09/52/forest-4242142_1280.jpg";
+          break;
+        case 1:
+          imgSrc = "https://cdn.pixabay.com/photo/2020/03/12/12/44/forest-4923476_1280.jpg";
+          break;
+        case 2:
+          imgSrc = "https://cdn.pixabay.com/photo/2019/11/16/16/36/forest-4629809_1280.jpg";
+          break;
+        case 3:
+          imgSrc = "https://cdn.pixabay.com/photo/2021/03/04/20/03/forest-6068511_1280.jpg";
+          break;
+        case 4:
+          imgSrc = "https://cdn.pixabay.com/photo/2020/04/10/05/55/nature-5023501_1280.jpg";
+          break;
+        default:
+          display = false;
+      }
+
+      if (display) {
+        image.src = imgSrc;
+        image.style.display = "block";
+        image.style.animation = "fadein 1s";
+      } else {
+        image.style.display = "none";
+      }
+    }
+
+    function endGame() {
+      endMusic.play();
+      const result = document.getElementById("result");
+      const optionsDiv = document.getElementById("options");
+      const image = document.getElementById("forestImage");
+      document.getElementById("question").innerText = "";
+
+      image.style.display = "block";
+
+      if (score >= 4) {
+        result.innerText = "🌼 你是大自然的真正守護者！森林蓬勃繁榮！";
+      } else if (score === 3) {
+        result.innerText = "🍀 森林健康旺盛，但仍有進步空間！";
+      } else if (score === 2) {
+        result.innerText = "🌿 森林勉強維持平衡，但需要更多努力！";
+      } else if (score === 1) {
+        result.innerText = "🌳 森林枯榮參半，自然正發出警訊！";
+      } else {
+        result.innerText = "⚠️ 森林岌岌可危，快行動起來守護自然！";
+      }
+
+      optionsDiv.innerHTML = '<button class="option" onclick="restartGame()">重新開始</button>';
+      document.getElementById("progressFill").style.width = "100%";
+    }
+
+    function restartGame() {
+      score = 0;
+      currentQuestion = 0;
+      document.getElementById("result").innerText = "";
+      document.getElementById("forestImage").style.display = "none";
+      document.getElementById("progressFill").style.width = "0%";
+      showQuestion();
+    }
+
+    showQuestion();
+  </script>
+</body>
+</html>
